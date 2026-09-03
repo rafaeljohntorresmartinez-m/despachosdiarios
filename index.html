@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Logística - Datos Completos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .kpi-container { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; max-width: 1200px; margin: 0 auto 20px auto; flex-wrap: wrap; }
+        .kpi-card { background: #2c3e50; color: white; border-radius: 10px; padding: 20px; flex: 1; min-width: 250px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .kpi-card h2 { margin: 0 0 10px 0; font-size: 1.1rem; font-weight: normal; color: #ecf0f1; }
+        .kpi-card .value { font-size: 2rem; font-weight: bold; margin: 0; color: #3498db; }
+        .kpi-card .subtitle { font-size: 1rem; color: #bdc3c7; margin-top: 5px;}
+        canvas { width: 100% !important; max-height: 350px; }
+        .full-width { grid-column: 1 / -1; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
+        th { background-color: #2c3e50; color: white; position: sticky; top: 0; }
+        tr:hover { background-color: #f1f1f1; }
+        .table-container { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
+        .total-row { font-weight: bold; background-color: #ecf0f1 !important; color: #2c3e50; }
+        .total-row td { font-size: 1.1rem; border-top: 2px solid #2c3e50; }
+    </style>
+</head>
+<body>
+
+    <h1>Panel de Control: Despachos Diarios</h1>
+
+    <div class="kpi-container">
+        <!-- TÍTULO ACTUALIZADO -->
+        <div class="kpi-card">
+            <h2>Total Despachado a la Fecha en Septiembre</h2>
+            <p class="value" id="kpiTotalKgSeptiembre">0</p>
+            <p class="subtitle">Kilogramos (Kg)</p>
+        </div>
+        <div class="kpi-card">
+            <h2>Top Cliente (Global)</h2>
+            <p class="value" id="kpiTopClient" style="color: #2ecc71; font-size: 1.2rem;">-</p>
+            <p class="subtitle" id="kpiTopClientKg">0 Kg</p>
+        </div>
+        <div class="kpi-card">
+            <h2>Top Cliente (3 de Sep)</h2>
+            <p class="value" id="kpiTopClientSept3" style="color: #f1c40f; font-size: 1.2rem;">-</p>
+            <p class="subtitle" id="kpiTopClientSept3Kg">0 Kg</p>
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div class="card full-width">
+            <h3 style="text-align: center;">Diagrama de Pareto: Kilogramos por Cliente (Global)</h3>
+            <canvas id="chartPareto"></canvas>
+        </div>
+
+        <div class="card">
+            <h3 style="text-align: center;">Kilogramos por Zona (3 de Septiembre)</h3>
+            <p style="text-align: center; font-size: 1.1rem; margin: 0 0 10px 0; color: #2c3e50;">
+                Total de la fecha: <strong id="totalKgSept3" style="color: #e74c3c;">0 Kg</strong>
+            </p>
+            <canvas id="chartZona"></canvas>
+        </div>
+
+        <div class="card">
+            <h3 style="text-align: center;">Kilogramos por Cliente según Fecha</h3>
+            <canvas id="chartClientesFecha"></canvas>
+        </div>
+
+        <div class="card full-width">
+            <h3 style="text-align: center;">Kilogramos de Rutas (Destinos) por Zona (3 de Septiembre)</h3>
+            <canvas id="chartRutas"></canvas>
+        </div>
+
+        <div class="card full-width">
+            <h3 style="text-align: center;">Detalle de Despachos: 3 de Septiembre</h3>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Zona</th>
+                            <th>Cliente</th>
+                            <th>Kilogramos (Solicitados)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PEGA AQUÍ LOS DATOS DE TU NUEVO ARCHIVO DESPACHO DIARIO_2.xlsx
+        const data = [
+            { fecha: '2026-09-02', origen: 'DURAN', destino: 'DURAN', zona: 'COSTA', cliente: 'BORSEA S.A.', kg: 850 },
+            { fecha: '2026-09-02', origen: 'DURAN', destino: 'DURAN', zona: 'COSTA', cliente: 'BORSEA S.A.', kg: 1000 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'SANTO DOMINGO', zona: 'COSTA', cliente: 'MEGA AVES MEGAVES CIA. LTDA', kg: 2000 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'MANABI', zona: 'COSTA', cliente: 'JOSE MANUEL ORMAZA LOOR', kg: 80 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'MANABI', zona: 'COSTA', cliente: 'JOSE MANUEL ORMAZA LOOR', kg: 40 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'MANABI', zona: 'COSTA', cliente: 'JOSE MANUEL ORMAZA LOOR', kg: 152 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'MANABI', zona: 'COSTA', cliente: 'JOSE MANUEL ORMAZA LOOR', kg: 80 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'MANABI', zona: 'COSTA', cliente: 'BITAR LOOR ELIAS CHAFIC', kg: 1000 },
+            { fecha: '2026-09-02', origen: 'DURAN', destino: 'GUAYAQUIL', zona: 'COSTA', cliente: 'NEGOCIOS Y PRODUCTOS DEL PACIFICO NEPROPAC S.A', kg: 250 },
+            { fecha: '2026-09-03', origen: 'QUITO', destino: 'BALSAS', zona: 'COSTA', cliente: 'RAMIREZ PALMA FRANKLIN VICENTE', kg: 4000 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'BALSAS', zona: 'COSTA', cliente: 'AGROINDUSTRIAL REINA DEL CISNE AVIPORECIS S.A.', kg: 250 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'QUITO', zona: 'SIERRA', cliente: 'ECUADPREMEX', kg: 300 },
+            { fecha: '2026-09-03', origen: 'QUITO', destino: 'PUYO', zona: 'ORIENTE', cliente: 'EL PROGRESO PREMIUM "CEPP" S.A.S.', kg: 4000 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'GUAYAQUIL', zona: 'COSTA', cliente: 'MOLINOS CHAMPION MOCHASA S.A.S.', kg: 1000 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'NOBOL', zona: 'COSTA', cliente: 'ECU ITALCOL S.A.', kg: 50 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'GUAYAQUIL', zona: 'COSTA', cliente: 'PITIMAR S.A.S.', kg: 25 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'SANTO DOMINGO', zona: 'COSTA', cliente: 'MONTERO ZURITA KAROLINA ELIZABETH', kg: 192 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'SANTO DOMINGO', zona: 'COSTA', cliente: 'MONTERO ZURITA KAROLINA ELIZABETH', kg: 300 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'SANTO DOMINGO', zona: 'COSTA', cliente: 'MONTERO ZURITA KAROLINA ELIZABETH', kg: 375 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'SANTO DOMINGO', zona: 'COSTA', cliente: 'COMPAÑIA AVICOLA CORPROAVIC CIA. LTDA.', kg: 840 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'SANTO DOMINGO', zona: 'COSTA', cliente: 'COMPAÑIA AVICOLA CORPROAVIC CIA. LTDA.', kg: 140 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'SANTO DOMINGO', zona: 'COSTA', cliente: 'COMPAÑIA AVICOLA CORPROAVIC CIA. LTDA.', kg: 125 },
+            { fecha: '2026-09-03', origen: 'DURAN', destino: 'DURAN', zona: 'COSTA', cliente: 'BIOMAR-ECUADOR S.A.', kg: 15000 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'RIOBAMBA', zona: 'SIERRA', cliente: 'ANGEL VICENTE MAIGUALEMA QUISIGUINA', kg: 125 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'RIOBAMBA', zona: 'SIERRA', cliente: 'ANGEL VICENTE MAIGUALEMA QUISIGUINA', kg: 400 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'RIOBAMBA', zona: 'SIERRA', cliente: 'ANGEL VICENTE MAIGUALEMA QUISIGUINA', kg: 48 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'RIOBAMBA', zona: 'SIERRA', cliente: 'ANGEL VICENTE MAIGUALEMA QUISIGUINA', kg: 150 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'RIOBAMBA', zona: 'SIERRA', cliente: 'ANGEL VICENTE MAIGUALEMA QUISIGUINA', kg: 150 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'RIOBAMBA', zona: 'SIERRA', cliente: 'ANGEL VICENTE MAIGUALEMA QUISIGUINA', kg: 25 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'PELILEO', zona: 'SIERRA', cliente: 'SOCIEDAD COMERCIAL Y AGRICOLA LLERENA GARZON GUADALUPE', kg: 1300 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'AMBATO', zona: 'SIERRA', cliente: 'ABRAHAM LENKER IZURIETA', kg: 125 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'AMBATO/SANTA FE', zona: 'SIERRA', cliente: 'AVIPAZ CIA. LTDA.', kg: 2000 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'AMBATO/SAMANGA', zona: 'SIERRA', cliente: 'AVIPAZ CIA. LTDA.', kg: 1000 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'QUITO', zona: 'SIERRA', cliente: 'ALIMENTOS BALANCEADOS AVIFORTE CIA. LTDA.', kg: 1375 },
+            { fecha: '2026-09-04', origen: 'DURAN', destino: 'QUITO', zona: 'SIERRA', cliente: 'ALIMENTOS BALANCEADOS AVIFORTE CIA. LTDA.', kg: 2275 },
+            { fecha: '2026-09-03', origen: 'QUITO', destino: 'QUITO', zona: 'SIERRA', cliente: 'CASAGRO S.A.S.', kg: 10 },
+            { fecha: '2026-09-03', origen: 'QUITO', destino: 'QUITO', zona: 'SIERRA', cliente: 'CASAGRO S.A.S.', kg: 200 },
+            { fecha: '2026-09-03', origen: 'QUITO', destino: 'QUITO', zona: 'SIERRA', cliente: 'CASAGRO S.A.S.', kg: 15 }
+        ];
+
+        let totalKg = 0;
+        let totalKgSeptiembre = 0; // Nueva variable para Septiembre
+        const clientesMap = {};
+        const fechasMap = {};
+
+        data.forEach(row => {
+            totalKg += row.kg;
+            clientesMap[row.cliente] = (clientesMap[row.cliente] || 0) + row.kg;
+            fechasMap[row.fecha] = (fechasMap[row.fecha] || 0) + row.kg;
+
+            // Filtro específico para sumar SOLO los registros del mes de septiembre
+            if (row.fecha.includes('-09-')) {
+                totalKgSeptiembre += row.kg;
+            }
+        });
+
+        let topClient = "";
+        let topClientKg = 0;
+        for (const [cliente, kg] of Object.entries(clientesMap)) {
+            if (kg > topClientKg) {
+                topClientKg = kg;
+                topClient = cliente;
+            }
+        }
+
+        const targetDate = "2026-09-03";
+        let totalKgSept3 = 0;
+        const clientesSept3Map = {};
+        const zonasSept3Map = {};
+        const tablaDetalleMap = {};
+        
+        const rutasCostaSept3Map = {};
+        const rutasSierraSept3Map = {};
+        const rutasOrienteSept3Map = {}; 
+
+        data.filter(d => d.fecha === targetDate).forEach(d => {
+            clientesSept3Map[d.cliente] = (clientesSept3Map[d.cliente] || 0) + d.kg;
+            totalKgSept3 += d.kg;
+            zonasSept3Map[d.zona] = (zonasSept3Map[d.zona] || 0) + d.kg;
+
+            if (d.zona === "COSTA") rutasCostaSept3Map[d.destino] = (rutasCostaSept3Map[d.destino] || 0) + d.kg;
+            if (d.zona === "SIERRA") rutasSierraSept3Map[d.destino] = (rutasSierraSept3Map[d.destino] || 0) + d.kg;
+            if (d.zona === "ORIENTE") rutasOrienteSept3Map[d.destino] = (rutasOrienteSept3Map[d.destino] || 0) + d.kg;
+
+            const tableKey = `${d.origen}|${d.destino}|${d.zona}|${d.cliente}`;
+            if(!tablaDetalleMap[tableKey]) {
+                tablaDetalleMap[tableKey] = { origen: d.origen, destino: d.destino, zona: d.zona, cliente: d.cliente, kg: 0 };
+            }
+            tablaDetalleMap[tableKey].kg += d.kg;
+        });
+        
+        let topClientSept3 = "N/A";
+        let topClientSept3Kg = 0;
+        for (const [cliente, kg] of Object.entries(clientesSept3Map)) {
+            if (kg > topClientSept3Kg) {
+                topClientSept3Kg = kg;
+                topClientSept3 = cliente;
+            }
+        }
+
+        const tableBody = document.querySelector('#dataTable tbody');
+        Object.values(tablaDetalleMap).sort((a, b) => a.cliente.localeCompare(b.cliente)).forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.origen}</td>
+                <td>${item.destino}</td>
+                <td>${item.zona}</td>
+                <td>${item.cliente}</td>
+                <td>${item.kg.toLocaleString('es-EC')}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        const trTotal = document.createElement('tr');
+        trTotal.className = 'total-row';
+        trTotal.innerHTML = `
+            <td colspan="4" style="text-align: right;">TOTAL KG (3 de Septiembre):</td>
+            <td style="color: #e74c3c;">${totalKgSept3.toLocaleString('es-EC')}</td>
+        `;
+        tableBody.appendChild(trTotal);
+
+        // Actualización de KPIs en la vista HTML (Se usa la variable totalKgSeptiembre)
+        document.getElementById('kpiTotalKgSeptiembre').innerText = totalKgSeptiembre.toLocaleString('es-EC');
+        document.getElementById('kpiTopClient').innerText = topClient;
+        document.getElementById('kpiTopClientKg').innerText = topClientKg.toLocaleString('es-EC') + ' Kg';
+        document.getElementById('kpiTopClientSept3').innerText = topClientSept3;
+        document.getElementById('kpiTopClientSept3Kg').innerText = topClientSept3Kg.toLocaleString('es-EC') + ' Kg';
+        document.getElementById('totalKgSept3').innerText = totalKgSept3.toLocaleString('es-EC') + " Kg";
+
+        // GRÁFICOS
+        const clientesOrdenados = Object.keys(clientesMap).map(c => ({ cliente: c, kg: clientesMap[c] })).sort((a, b) => b.kg - a.kg);
+        let kgAcumulados = 0;
+        const paretoLabels = [], paretoBarras = [], paretoLinea = [];
+
+        clientesOrdenados.forEach(item => {
+            kgAcumulados += item.kg;
+            paretoLabels.push(item.cliente.substring(0, 20) + '...'); 
+            paretoBarras.push(item.kg);
+            paretoLinea.push(((kgAcumulados / totalKg) * 100).toFixed(2));
+        });
+
+        new Chart(document.getElementById('chartPareto'), {
+            type: 'bar',
+            data: {
+                labels: paretoLabels,
+                datasets: [
+                    { label: 'Porcentaje Acumulado (%)', data: paretoLinea, type: 'line', borderColor: '#e74c3c', backgroundColor: '#e74c3c', yAxisID: 'y1', tension: 0.1, borderWidth: 3 },
+                    { label: 'Kg Solicitados', data: paretoBarras, backgroundColor: '#34495e', yAxisID: 'y', borderRadius: 3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { type: 'linear', position: 'left', title: { display: true, text: 'Kilogramos' } },
+                    y1: { type: 'linear', position: 'right', max: 100, title: { display: true, text: 'Porcentaje (%)' }, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('chartZona'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(zonasSept3Map),
+                datasets: [{ 
+                    data: Object.values(zonasSept3Map), 
+                    backgroundColor: ['#3498db', '#2ecc71', '#e67e22'],
+                    borderWidth: 1 
+                }]
+            }
+        });
+
+        const fechasOrdenadas = Object.keys(fechasMap).sort();
+        const todosLosClientes = [...new Set(data.map(d => d.cliente))];
+        const paletaColores = ['#e74c3c', '#9b59b6', '#34495e', '#f1c40f', '#1abc9c', '#d35400', '#7f8c8d', '#2980b9', '#8e44ad', '#16a085'];
+        
+        const datasetsClientes = todosLosClientes.map((cliente, index) => {
+            return {
+                label: cliente.substring(0, 15) + '...',
+                data: fechasOrdenadas.map(fecha => {
+                    return data.filter(d => d.cliente === cliente && d.fecha === fecha).reduce((suma, r) => suma + r.kg, 0);
+                }),
+                backgroundColor: paletaColores[index % paletaColores.length]
+            };
+        });
+
+        new Chart(document.getElementById('chartClientesFecha'), {
+            type: 'bar',
+            data: { labels: fechasOrdenadas, datasets: datasetsClientes },
+            options: { scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { display: false } } }
+        });
+
+        const todasLasRutasSept3 = [...new Set([...Object.keys(rutasCostaSept3Map), ...Object.keys(rutasSierraSept3Map), ...Object.keys(rutasOrienteSept3Map)])];
+        
+        new Chart(document.getElementById('chartRutas'), {
+            type: 'bar',
+            data: {
+                labels: todasLasRutasSept3,
+                datasets: [
+                    { label: 'COSTA', data: todasLasRutasSept3.map(ruta => rutasCostaSept3Map[ruta] || 0), backgroundColor: '#3498db' },
+                    { label: 'SIERRA', data: todasLasRutasSept3.map(ruta => rutasSierraSept3Map[ruta] || 0), backgroundColor: '#e67e22' },
+                    { label: 'ORIENTE', data: todasLasRutasSept3.map(ruta => rutasOrienteSept3Map[ruta] || 0), backgroundColor: '#2ecc71' }
+                ]
+            },
+            options: { indexAxis: 'y', scales: { x: { stacked: true }, y: { stacked: true } } }
+        });
+    </script>
+</body>
+</html>
