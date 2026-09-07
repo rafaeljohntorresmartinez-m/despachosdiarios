@@ -5,7 +5,7 @@
     <title>Dashboard Logístico y Recepciones</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 1350px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         h1, h2 { text-align: center; color: #333; }
         .kpi-container { display: flex; justify-content: space-around; margin-bottom: 30px; }
         .kpi-card { background: #007bff; color: white; padding: 20px; border-radius: 8px; width: 30%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -17,9 +17,9 @@
         .full-width { width: 100%; }
         .table-wrapper { margin-top: 40px; }
         .table-container { width: 100%; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
-        th { background-color: #2c3e50; color: white; padding: 12px 15px; text-align: left; position: sticky; top: 0; z-index: 1; }
-        td { padding: 12px 15px; border-bottom: 1px solid #eee; color: #333; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+        th { background-color: #2c3e50; color: white; padding: 12px 10px; text-align: left; position: sticky; top: 0; z-index: 1; }
+        td { padding: 10px; border-bottom: 1px solid #eee; color: #333; word-break: break-word; }
         tr:nth-child(even) { background-color: #f8f9fa; }
         tr:hover { background-color: #f1f3f5; }
         .table-footer { font-weight: bold; background-color: #e9ecef; position: sticky; bottom: 0; }
@@ -39,6 +39,7 @@
         <h1>Dashboard Integrado - Logística y Recepciones</h1>
         <div id="loading" class="loading">Cargando datos desde Google Sheets...</div>
 
+        <!-- KPIS -->
         <div class="kpi-container">
             <div class="kpi-card">
                 <h3>Total KG Despachados</h3>
@@ -55,6 +56,7 @@
             </div>
         </div>
 
+        <!-- GRAFICOS DESPACHOS -->
         <div class="chart-row">
             <div class="chart-container">
                 <div id="chart-rutas-zona" class="plotly-graph-div" style="height:350px; width:100%;"></div>
@@ -64,6 +66,7 @@
             </div>
         </div>
 
+        <!-- GRAFICO DE VEHICULOS POR RUTA -->
         <div class="chart-row full-width">
             <div class="full-width">
                 <div id="chart-vehiculos-ruta" class="plotly-graph-div" style="height:380px; width:100%;"></div>
@@ -76,6 +79,7 @@
             </div>
         </div>
 
+        <!-- TABLA GENERAL DESPACHOS -->
         <div class="table-wrapper">
             <h2 style="margin-bottom: 20px; text-align: center;">Detalle General de Despachos</h2>
             <div class='table-container'>
@@ -88,6 +92,7 @@
                             <th>Zona</th>
                             <th>Vehículo</th>
                             <th>Cliente</th>
+                            <th>Líneas del pedido</th>
                             <th>Kilogramos (Solicitados)</th>
                         </tr>
                     </thead>
@@ -96,6 +101,7 @@
             </div>
         </div>
 
+        <!-- SECCION PROGRAMADOS FECHA SELECCIONADA -->
         <div class='table-wrapper' style='margin-top: 50px;'>
             <h2 id="titulo-programados" style="margin-bottom: 20px; text-align: center; color: #155724;">Despachos Programados</h2>
             <div class="chart-row">
@@ -113,6 +119,7 @@
                             <th style='background-color: #28a745;'>Zona</th>
                             <th style='background-color: #28a745;'>Vehículo</th>
                             <th style='background-color: #28a745;'>Cliente</th>
+                            <th style='background-color: #28a745;'>Líneas del pedido</th>
                             <th style='background-color: #28a745;'>Kilogramos (A Despachar)</th>
                         </tr>
                     </thead>
@@ -121,6 +128,7 @@
             </div>
         </div>
 
+        <!-- MODULO RECEPCIONES -->
         <div class='table-wrapper' style='margin-top: 60px; padding-top: 30px; border-top: 2px dashed #ccc;'>
             <h2 style="margin-bottom: 20px; text-align: center; color: #6f42c1;">Módulo de Recepciones</h2>
             <div class="chart-row">
@@ -163,7 +171,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZH8GkMJD_f21_oFk6KLDbkYbOMfJOmRIfwoWyRYRObRC9-WH4fzLbLIXNd3cAwEBe/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWjVS7CIRDeWCcswsHZ9rUDdPq5gPY63sDluV2zFkEsblCVR66hkpchoc898UdPtVO/exec";
 
         function formatDateString(val) {
             if (!val) return '';
@@ -203,6 +211,7 @@
             return isNaN(parsed) ? 0 : parsed;
         }
 
+        // Búsqueda flexible de propiedades para evitar fallos por tildes o variaciones de nombre
         function getProp(obj, possibleKeys) {
             if (!obj) return '';
             const keys = Object.keys(obj);
@@ -222,7 +231,8 @@
 
         async function initDashboard() {
             try {
-                const response = await fetch(SCRIPT_URL);
+                // Parámetro dinámico para ignorar la caché del navegador
+                const response = await fetch(`${SCRIPT_URL}?t=${new Date().getTime()}`);
                 const data = await response.json();
                 
                 const loadingElem = document.getElementById('loading');
@@ -324,7 +334,6 @@
             Plotly.newPlot('chart-linea-fechas', dataLinea, { title: 'Comparativa Diaria de KG Despachados', xaxis: {title: 'Fecha'}, yaxis: {title: 'KG Despachados'} }, {responsive: true});
         }
 
-        // NUEVA FUNCIÓN: Genera la gráfica de tipos de vehículos distribuidos por Ruta / Destino
         function renderGraficoVehiculosPorRuta(despachos) {
             let vehiculosRutaMap = {};
             let tiposVehiculos = new Set();
@@ -379,6 +388,10 @@
                 let fechaClean = formatDateString(getProp(d, ['Fecha Despacho', 'Fecha']));
                 let kg = parseCleanNumber(getProp(d, ['Kilogramos', 'KG', 'Solicitados']));
                 let vehiculo = getProp(d, ['Vehiculo', 'Vehículo']) || '-';
+                
+                // Múltiples alternativas de búsqueda para la columna "Líneas del pedido"
+                let lineasPedido = getProp(d, ['Líneas del pedido', 'Lineas del pedido', 'Líneas', 'Lineas', 'Pedido', 'Detalle']) || '-';
+                
                 total += kg;
                 let tr = `<tr>
                     <td>${fechaClean}</td>
@@ -387,12 +400,13 @@
                     <td>${getProp(d, ['Zona'])}</td>
                     <td><b>${vehiculo}</b></td>
                     <td>${getProp(d, ['Cliente'])}</td>
+                    <td>${lineasPedido}</td>
                     <td>${fmtInt(kg)}</td>
                 </tr>`;
                 tbody.innerHTML += tr;
             });
 
-            tbody.innerHTML += `<tr class='table-footer'><td colspan='6'>Total Global Solicitado</td><td>${fmtInt(total)}</td></tr>`;
+            tbody.innerHTML += `<tr class='table-footer'><td colspan='7'>Total Global Solicitado</td><td>${fmtInt(total)}</td></tr>`;
         }
 
         function renderDespachosProgramados(despachos, fecha) {
@@ -411,6 +425,8 @@
                 let fechaClean = formatDateString(getProp(d, ['Fecha Despacho', 'Fecha']));
                 let kg = parseCleanNumber(getProp(d, ['Kilogramos', 'KG', 'Solicitados']));
                 let vehiculo = getProp(d, ['Vehiculo', 'Vehículo']) || '-';
+                let lineasPedido = getProp(d, ['Líneas del pedido', 'Lineas del pedido', 'Líneas', 'Lineas', 'Pedido', 'Detalle']) || '-';
+                
                 total += kg;
                 let key = `${getProp(d, ['Zona']) || 'OTRO'} - ${getProp(d, ['Destino'])}`;
                 destinoZonaMap[key] = (destinoZonaMap[key] || 0) + kg;
@@ -422,12 +438,13 @@
                     <td>${getProp(d, ['Zona'])}</td>
                     <td><b>${vehiculo}</b></td>
                     <td>${getProp(d, ['Cliente'])}</td>
+                    <td>${lineasPedido}</td>
                     <td>${fmtInt(kg)}</td>
                 </tr>`;
                 tbody.innerHTML += tr;
             });
 
-            tbody.innerHTML += `<tr class='table-footer' style='background-color: #d4edda;'><td colspan='6'>Total Despachos (${fecha})</td><td>${fmtInt(total)}</td></tr>`;
+            tbody.innerHTML += `<tr class='table-footer' style='background-color: #d4edda;'><td colspan='7'>Total Despachos (${fecha})</td><td>${fmtInt(total)}</td></tr>`;
 
             let dataPie = [{
                 labels: Object.keys(destinoZonaMap),
