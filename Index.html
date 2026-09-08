@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Logístico y Recepciones</title>
+    <style>
+        /* FONDO GENERAL: Azul oscuro profundo (Estilo Neon/Dashboard Moderno) */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #0f111a; /* Fondo principal muy oscuro */
+            color: #e2e8f0; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        
+        /* CONTENEDOR PRINCIPAL: Paneles color indigo oscuro */
+        .container { 
+            max-width: 1350px; 
+            margin: auto; 
+            background: #1a1c2e; 
+            border: 1px solid #272a45; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            overflow: hidden; 
+        }
+        
+        /* HEADER CORPORATIVO PARA EL LOGOTIPO */
+        .brand-header { 
+            padding: 20px 30px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #141526; 
+            border-bottom: 1px solid #272a45;
+        }
+        .brand-header img { max-height: 80px; object-fit: contain; }
+        
+        /* PADDING INTERNO DEL DASHBOARD */
+        .content-padding { padding: 30px; }
+        
+        h1, h2 { text-align: center; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        h1 { color: #00f2fe; letter-spacing: 1px; font-weight: 600; }
+        h3 { text-align: center; color: #94a3b8; margin-top: 0; margin-bottom: 30px; font-weight: normal; }
+        
+        /* TARJETAS KPI (Efecto Neón) */
+        .kpi-container { display: flex; justify-content: space-around; margin-bottom: 30px; }
+        .kpi-card { 
+            background: #22253e; 
+            border: 1px solid #2d3154;
+            border-top: 3px solid #00f2fe; /* Borde superior brillante */
+            color: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            width: 30%; 
+            text-align: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            transition: transform 0.3s ease;
+        }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 242, 254, 0.15); }
+        .kpi-card h3 { color: #94a3b8; margin: 0; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; }
+        .kpi-card h2 { margin: 15px 0 0 0; font-size: 2.2em; color: #00f2fe; } /* Texto principal cyan */
+        
+        /* Variaciones de colores para los KPIs */
+        .kpi-card.top-client { border-top-color: #00e676; }
+        .kpi-card.top-client h2, .kpi-card.top-client h3#kpi-top-client-val { color: #00e676; }
+        .kpi-card.rutas-card { border-top-color: #b388ff; }
+        .kpi-card.rutas-card h2 { color: #b388ff; }
+
+        .chart-row { display: flex; justify-content: space-between; margin-bottom: 30px; flex-wrap: wrap; }
+        .chart-container { 
+            width: 48%; 
+            min-width: 400px; 
+            margin-bottom: 20px; 
+            background: #1e2138; 
+            border: 1px solid #2d3154; 
+            border-radius: 8px; 
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .full-width { width: 100%; background: #1e2138; border: 1px solid #2d3154; border-radius: 8px; padding: 10px; box-sizing: border-box; }
+        
+        /* TABLAS ESTILO DARK DASHBOARD */
+        .table-wrapper { margin-top: 40px; }
+        .table-container { width: 100%; max-height: 400px; overflow: auto; background: #1a1c2e; border: 1px solid #272a45; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88em; color: #cbd5e1; }
+        
+        th { 
+            background-color: #22253e; 
+            color: #00f2fe; /* Encabezados color neon */
+            padding: 14px 15px; 
+            text-align: left; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1; 
+            border-bottom: 2px solid #2d3154; 
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+            white-space: nowrap; /* Evita que el título se divida en dos líneas */
+        }
+        td { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #272a45; 
+            white-space: nowrap; /* Evita que el texto de las celdas se rompa a la mitad */
+        }
+        tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
+        tr:hover { background-color: rgba(0, 242, 254, 0.05); } /* Efecto hover azul neón */
+        
+        .table-footer { font-weight: bold; background-color: #141526; position: sticky; bottom: 0; }
+        .table-footer td { border-top: 2px solid #2d3154; color: #00f2fe; text-align: right; }
+        .table-footer td:last-child { text-align: left; }
+        
+        /* PESTAÑAS (TABS) */
+        .tab-buttons { display: flex; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+        .tab-button { 
+            background-color: #22253e; 
+            border: 1px solid #2d3154; 
+            padding: 10px 25px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            margin: 5px; 
+            border-radius: 20px; /* Botones redondeados */
+            transition: all 0.3s; 
+            font-weight: bold; 
+            color: #94a3b8; 
+        }
+        .tab-button:hover { background-color: #2d3154; color: white; }
+        .tab-button.active { 
+            background-color: rgba(0, 242, 254, 0.1); 
+            color: #00f2fe; 
+            border-color: #00f2fe; 
+            box-shadow: 0 0 10px rgba(0,242,254,0.2); 
+        }
+        .tab-content { padding: 20px; border: 1px solid #2d3154; border-radius: 8px; background: #1e2138; }
+        
+        .loading { text-align: center; font-weight: bold; padding: 20px; color: #00f2fe; }
+        
+        /* Personalización barras de scroll (Solo webkit) */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #141526; }
+        ::-webkit-scrollbar-thumb { background: #2d3154; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00f2fe; }
+    </style>
+    <script charset="utf-8" src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- SECCIÓN DEL LOGOTIPO -->
+        <div class="brand-header">
+            <!-- REEMPLAZA "premex.png" POR EL NOMBRE EXACTO DE TU IMAGEN SUBIDA A GITHUB -->
+            <img src="tu-logo-aqui.png" alt="Logotipo Premex" onerror="this.src='https://placehold.co/400x100/141526/00f2fe?text=PREMEX+DASHBOARD';">
+        </div>
+
+        <div class="content-padding">
+            <h1>DASHBOARD INTEGRADO</h1>
+            <h3>MÓDULO DE LOGÍSTICA Y RECEPCIONES</h3>
+            
+            <div id="loading" class="loading">Sincronizando con base de datos...</div>
+
+            <!-- KPIS -->
+            <div class="kpi-container">
+                <div class="kpi-card">
+                    <h3>Total KG Despachados</h3>
+                    <h2 id="kpi-total-kg">0 kg</h2>
+                </div>
+                <div class="kpi-card top-client">
+                    <h3>Cliente Principal</h3>
+                    <h2 id="kpi-top-client-name" style="font-size: 1.2em; margin-top:15px; color: white;">-</h2>
+                    <h3 id="kpi-top-client-val" style="margin-top: 5px; font-weight:bold;">0 kg</h3>
+                </div>
+                <div class="kpi-card rutas-card">
+                    <h3>Número Total de Rutas</h3>
+                    <h2 id="kpi-total-rutas">0</h2>
+                </div>
+            </div>
+
+            <!-- GRAFICOS DESPACHOS -->
+            <div class="chart-row">
+                <div class="chart-container">
+                    <div id="chart-rutas-zona" style="height:350px; width:100%;"></div>
+                </div>
+                <div class="chart-container">
+                    <div id="chart-pie-zonas" style="height:350px; width:100%;"></div>
+                </div>
+            </div>
+
+            <!-- GRAFICO DE VEHICULOS POR RUTA -->
+            <div class="chart-row">
+                <div class="full-width">
+                    <div id="chart-vehiculos-ruta" style="height:380px; width:100%;"></div>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="full-width">
+                    <div id="chart-linea-fechas" style="height:350px; width:100%;"></div>
+                </div>
+            </div>
+
+            <!-- TABLA GENERAL DESPACHOS -->
+            <div class="table-wrapper">
+                <h2 style="margin-bottom: 20px; color: #fff;">DETALLE GENERAL DE DESPACHOS</h2>
+                <div class='table-container'>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha Despacho</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Zona</th>
+                                <th>Vehículo</th>
+                                <th>Cliente</th>
+                                <th>Líneas del pedido</th>
+                                <th>Kilogramos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-despachos-general"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECCION PROGRAMADOS FECHA SELECCIONADA -->
+            <div class='table-wrapper' style='margin-top: 60px;'>
+                <h2 id="titulo-programados" style="margin-bottom: 20px; color: #00e676;">DESPACHOS PROGRAMADOS</h2>
+                <div class="chart-row">
+                    <div class="full-width" style="margin-bottom: 20px;">
+                        <div id="chart-pie-programados" style="height:350px; width:100%;"></div>
+                    </div>
+                </div>
+                <div class='table-container' style='max-height: none;'>
+                    <table style='border-top: 2px solid #00e676;'>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Zona</th>
+                                <th>Vehículo</th>
+                                <th>Cliente</th>
+                                <th>Líneas del pedido</th>
+                                <th>KG (A Despachar)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-despachos-programados"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MODULO RECEPCIONES -->
+            <div class='table-wrapper' style='margin-top: 60px; padding-top: 30px; border-top: 1px dashed #2d3154;'>
+                <h2 style="margin-bottom: 20px; color: #b388ff;">MÓDULO DE RECEPCIONES</h2>
+                <div class="chart-row">
+                    <div class="chart-container">
+                        <div id="chart-recepciones-fechas" style="height:350px; width:100%;"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="chart-recepciones-destino-pie" style="height:350px; width:100%;"></div>
+                    </div>
+                </div>
+
+                <div class="chart-row" style="justify-content: center; margin-top: 20px;">
+                    <div class="chart-container" style="width: 70%;">
+                        <div id="chart-recepciones-barras-dia" style="height:350px; width:100%;"></div>
+                    </div>
+                </div>
+
+                <h3 id="titulo-tabs-recepcion" style="color: #b388ff; margin-top: 40px;">Vista Dinámica por Destino</h3>
+                <div style="margin-bottom: 40px;">
+                    <div class='tab-buttons' id="tab-buttons-container"></div>
+                    <div id="tab-contents-container"></div>
+                </div>
+
+                <h3 id="titulo-detalle-recepcion" style="color: #b388ff; margin-top: 40px;">Detalle General de Recepciones</h3>
+                <div class='table-container' style='max-height: none;'>
+                    <table style='border-top: 2px solid #b388ff;'>
+                        <thead>
+                            <tr>
+                                <th>FECHA</th>
+                                <th>IMPORTACION</th>
+                                <th>DESTINO</th>
+                                <th>PRODUCTO</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-recepciones-dia"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div> 
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWjVS7CIRDeWCcswsHZ9rUDdPq5gPY63sDluV2zFkEsblCVR66hkpchoc898UdPtVO/exec";
+
+        // Plantilla global para gráficos PLOTLY (Ajustada al nuevo tema NEON DARK)
+        const darkThemeLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#cbd5e1', family: "'Segoe UI', Tahoma, sans-serif" },
+            xaxis: { gridcolor: 'rgba(255,255,255,0.05)', zerolinecolor: 'rgba(255,255,255,0.1)', tickcolor: 'rgba(255,255,255,0.1)' },
+            yaxis: { gridcolor: 'rgba(255,255,255,0.05)', zerolinecolor: 'rgba(255,255,255,0.1)', tickcolor: 'rgba(255,255,255,0.1)' },
+            margin: { t: 50, b: 50, l: 50, r: 20 },
+            title: { font: { color: '#ffffff', size: 16 } }
+        };
+
+        // Paleta de colores Neón
+        const brandColors = ["#00f2fe", "#4facfe", "#00e676", "#b388ff", "#ff4b2b", "#f9d423"];
+
+        // ===============================================
+        // DATOS DE PRUEBA (MOCK DATA)
+        // Se usarán automáticamente si Google Sheets falla o estás en modo Canvas
+        // ===============================================
+        const mockData = {
+            despachos: [
+                {"Fecha Despacho": "2026-09-08", "Origen": "DURAN", "Destino": "DURAN", "Zona": "COSTA", "Vehículo": "-", "Cliente": "INPROSA S.A.", "Líneas del pedido": "S21291 - [102622]", "Kilogramos": 1000},
+                {"Fecha Despacho": "2026-09-08", "Origen": "DURAN", "Destino": "DURAN", "Zona": "COSTA", "Vehículo": "-", "Cliente": "INPROSA S.A.", "Líneas del pedido": "S21262 - [411478]", "Kilogramos": 2000},
+                {"Fecha Despacho": "2026-09-08", "Origen": "DURAN", "Destino": "DURAN", "Zona": "COSTA", "Vehículo": "CAMION PREMEX", "Cliente": "INPROSA S.A.", "Líneas del pedido": "S21259 - [408213]", "Kilogramos": 1200},
+                {"Fecha Despacho": "2026-09-08", "Origen": "DURAN", "Destino": "MANABI", "Zona": "COSTA", "Vehículo": "T2/5TM", "Cliente": "ANDRADE MOREIRA JUAN", "Líneas del pedido": "S21221 - [411239]", "Kilogramos": 399},
+                {"Fecha Despacho": "2026-09-08", "Origen": "DURAN", "Destino": "BUENA FE", "Zona": "COSTA", "Vehículo": "T2/5TM", "Cliente": "GENETICA PORCINA", "Líneas del pedido": "S21221 - [500044]", "Kilogramos": 190},
+                {"Fecha Despacho": "2026-09-09", "Origen": "DURAN", "Destino": "QUITO", "Zona": "SIERRA", "Vehículo": "CARRO TANQUE", "Cliente": "AVICRISS", "Líneas del pedido": "S21167 - [408228]", "Kilogramos": 5000},
+                {"Fecha Despacho": "2026-09-09", "Origen": "DURAN", "Destino": "CUENCA", "Zona": "SIERRA", "Vehículo": "CAMION MENSUAL", "Cliente": "AGRIPAC", "Líneas del pedido": "S20929 - [102693]", "Kilogramos": 1500}
+            ],
+            recepciones: [
+                {"FECHA": "2026-09-08", "IMPORTACION": "IMP-001", "DESTINO": "BODEGA PRINCIPAL", "PRODUCTO": "VITAMINA A", "Total": 500},
+                {"FECHA": "2026-09-08", "IMPORTACION": "IMP-002", "DESTINO": "BODEGA PRINCIPAL", "PRODUCTO": "CALCIO", "Total": 1200},
+                {"FECHA": "2026-09-09", "IMPORTACION": "IMP-003", "DESTINO": "BODEGA NORTE", "PRODUCTO": "PREMEZCLA", "Total": 800}
+            ]
+        };
+
+        function formatDateString(val) {
+            if (!val) return '';
+            if (typeof val === 'string' && val.includes('T')) return val.split('T')[0];
+            let d = new Date(val);
+            if (!isNaN(d.getTime())) {
+                let year = d.getFullYear();
+                let month = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            return String(val).trim();
+        }
+
+        function parseCleanNumber(val) {
+            if (val === null || val === undefined || val === '') return 0;
+            if (typeof val === 'number') return val;
+            let str = String(val).trim();
+            str = str.replace(/[^0-9.,-]/g, '');
+            if (str.includes(',') && str.includes('.')) {
+                if (str.indexOf(',') < str.indexOf('.')) str = str.replace(/,/g, '');
+                else str = str.replace(/\./g, '').replace(',', '.');
+            } else if (str.includes(',')) {
+                if (str.split(',')[1] && str.split(',')[1].length === 3) str = str.replace(/,/g, '');
+                else str = str.replace(',', '.');
+            }
+            let parsed = parseFloat(str);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function getProp(obj, possibleKeys) {
+            if (!obj) return '';
+            const keys = Object.keys(obj);
+            for (let key of keys) {
+                let normalizedKey = key.trim().toLowerCase();
+                for (let pk of possibleKeys) {
+                    if (normalizedKey.includes(pk.toLowerCase())) return obj[key];
+                }
+            }
+            return '';
+        }
+
+        const fmtNumber = num => (Number(num) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmtInt = num => Math.round(Number(num) || 0).toLocaleString('en-US');
+
+        async function initDashboard() {
+            let data = null;
+            
+            try {
+                // Intento 1: Llamar a Google Sheets
+                const response = await fetch(`${SCRIPT_URL}?t=${new Date().getTime()}`);
+                data = await response.json();
+            } catch (error) {
+                console.warn("No se pudo conectar a Google Sheets o SCRIPT_URL no es válido. Usando datos de prueba (Mock Data).");
+                data = mockData; // Usar MockData en modo Canvas o en caso de error
+            }
+
+            const loadingElem = document.getElementById('loading');
+            if (loadingElem) loadingElem.style.display = 'none';
+
+            const despachos = data.despachos || [];
+            const recepciones = data.recepciones || [];
+
+            if (despachos.length === 0 && recepciones.length === 0) {
+                console.warn("No se encontraron registros.");
+                return;
+            }
+
+            const fechasDespacho = [...new Set(despachos.map(d => formatDateString(getProp(d, ['Fecha Despacho', 'Fecha']))))].filter(Boolean).sort();
+            const fechaActual = fechasDespacho[fechasDespacho.length - 1] || '';
+
+            renderKPIs(despachos);
+            renderGraficosDespachos(despachos, fechaActual);
+            renderGraficoVehiculosPorRuta(despachos);
+            renderTablaDespachosGeneral(despachos);
+            renderDespachosProgramados(despachos, fechaActual);
+            renderModuloRecepciones(recepciones, fechaActual);
+        }
+
+        function renderKPIs(despachos) {
+            let totalKg = 0; let clienteMap = {};
+            despachos.forEach(d => {
+                let kg = parseCleanNumber(getProp(d, ['Kilogramos', 'KG', 'Solicitados', 'Cantidad']));
+                totalKg += kg;
+                let cliente = String(getProp(d, ['Cliente', 'Cliente Principal']) || 'SIN CLIENTE').trim();
+                if (cliente) clienteMap[cliente] = (clienteMap[cliente] || 0) + kg;
+            });
+            let topCliente = "-"; let maxKg = -1;
+            for (let c in clienteMap) {
+                if (clienteMap[c] > maxKg) { maxKg = clienteMap[c]; topCliente = c; }
+            }
+            document.getElementById('kpi-total-kg').innerText = fmtNumber(totalKg) + " kg";
+            document.getElementById('kpi-top-client-name').innerText = topCliente;
+            document.getElementById('kpi-top-client-val').innerText = fmtNumber(maxKg > 0 ? maxKg : 0) + " kg";
+            document.getElementById('kpi-total-rutas').innerText = despachos.length;
+        }
+
+        function renderGraficosDespachos(despachos, fechaActual) {
+            let zonasRutas = {}; let zonasKg = {};
+            despachos.forEach(d => {
+                let z = String(getProp(d, ['Zona']) || 'OTRO').trim().toUpperCase();
+                let kg = parseCleanNumber(getProp(d, ['Kilogramos', 'KG', 'Solicitados']));
+                zonasRutas[z] = (zonasRutas[z] || 0) + 1;
+                zonasKg[z] = (zonasKg[z] || 0) + kg;
+            });
+
+            let zKeys = Object.keys(zonasRutas).sort();
+            // Colores por zona para gráfica de barras
+            let zColors = {"COSTA": "#00f2fe", "EXPORTACION": "#4facfe", "ORIENTE": "#f9d423", "SIERRA": "#00e676"};
+
+            let layoutBarRutas = Object.assign({}, darkThemeLayout, { title: 'Cantidad de Rutas por Zona', barmode: 'relative' });
+            Plotly.newPlot('chart-rutas-zona', zKeys.map(z => ({
+                x: [z], y: [zonasRutas[z]], name: z, type: 'bar', marker: { color: zColors[z] || '#b388ff' }
+            })), layoutBarRutas, {responsive: true});
+
+            let layoutPieZonas = Object.assign({}, darkThemeLayout, { title: 'Proporción de kg despachados x zona' });
+            Plotly.newPlot('chart-pie-zonas', [{
+                labels: Object.keys(zonasKg), values: Object.values(zonasKg), type: 'pie', hole: 0.5, 
+                marker: { colors: brandColors }, textinfo: "label+percent"
+            }], layoutPieZonas, {responsive: true});
+
+            let fechasMap = {};
+            despachos.forEach(d => {
+                let f = formatDateString(getProp(d, ['Fecha Despacho', 'Fecha']));
+                let kg = parseCleanNumber(getProp(d, ['Kilogramos', 'KG', 'Solicitados']));
+                if (f) fechasMap[f] = (fechasMap[f] || 0) + kg;
+            });
+            let fKeys = Object.keys(fechasMap).sort();
+            
+            let layoutLinea = Object.assign({}, darkThemeLayout, { 
+                title: 'Comparativa Diaria de KG Despachados', 
+                xaxis: Object.assign({title: 'Fecha'}, darkThemeLayout.xaxis), 
+                yaxis: Object.assign({title: 'KG'}, darkThemeLayout.yaxis) 
+            });
+            
+            Plotly.newPlot('chart-linea-fechas', [{
+                x: fKeys, y: fKeys.map(f => fechasMap[f]), type: 'scatter', mode: 'lines+markers', 
+                line: { color: '#00f2fe', width: 4 }, marker: {size: 10, color: '#4facfe'},
+                fill: 'tozeroy', fillcolor: 'rgba(0, 242, 254, 0.1)'
+            }], layoutLinea, {responsive: true});
+        }
+
+        function renderGraficoVehiculosPorRuta(despachos) {
+            let vehiculosRutaMap = {}; let tiposVehiculos = new Set(); let rutas = new Set();
+            despachos.forEach(d => {
+                let ruta = getProp(d, ['Destino', 'Zona', 'Ruta']) || 'SIN RUTA';
+                let vehiculo = getProp(d, ['Vehiculo', 'Vehículo', 'Tipo Vehiculo']) || 'NO ESPECIFICADO';
+                vehiculo = vehiculo.toString().trim().toUpperCase();
+                ruta = ruta.toString().trim().toUpperCase();
+                tiposVehiculos.add(vehiculo); rutas.add(ruta);
+                if (!vehiculosRutaMap[vehiculo]) vehiculosRutaMap[vehiculo] = {};
+                vehiculosRutaMap[vehiculo][ruta] = (vehiculosRutaMap[vehiculo][ruta] || 0) + 1;
+            });
+            let arrRutas = Array.from(rutas).sort(); let dataTraces = [];
+            
+            let i = 0;
+            tiposVehiculos.forEach(v => {
+                dataTraces.push({ 
+                    x: arrRutas, 
+                    y: arrRutas.map(r => vehiculosRutaMap[v][r] || 0), 
+                    name: v, 
+                    type: 'bar',
+                    marker: { color: brandColors[i % brandColors.length] }
+                });
+                i++;
+            });
+            let layout = Object.assign({}, darkThemeLayout, { 
+                title: 'Tipos de Vehículos Utilizados por Ruta / Destino', 
+                barmode: 'stack', 
+                xaxis: Object.assign({title: 'Ruta / Destino'}, darkThemeLayout.xaxis), 
+                yaxis: Object.assign({title: 'Cantidad'}, darkThemeLayout.yaxis) 
+            });
+            Plotly.newPlot('chart-vehiculos-ruta', dataTraces, layout, {responsive: true});
+        }
+
+        function renderTablaDespachosGeneral(despachos) {
+            let tbody = document.getElementById('tbody-despachos-general');
+            if (!tbody) return; tbody.innerHTML = ''; let total = 0;
+            despachos.forEach(d => {
+                let kg = parseCleanNumber(getProp(d, ['Kilogramos', 'KG', 'Solicitados'])); total += kg;
+                tbody.innerHTML += `<tr>
+                    <td>${formatDateString(getProp(d, ['Fecha Despacho', 'Fecha']))}</td>
+                    <td>${getProp(d, ['Origen'])}</td>
+                    <td>${getProp(d, ['Destino'])}</td>
+                    <td>${getProp(d, ['Zona'])}</td>
+                    <td style='color:#00f2fe;'><b>${getProp(d, ['Vehiculo', 'Vehículo']) || '-'}</b></td>
+                    <td>${getProp(d, ['Cliente'])}</td>
+                    <td style='color:#94a3b8;'>${getProp(d, ['Líneas del pedido', 'Lineas del pedido', 'Líneas', 'Lineas', 'Pedido']) || '-'}</td>
+                    <td style='font-weight:bold;'>${fmtInt(kg)}</td>
+                </tr>`;
+            });
+            tbody.innerHTML += `<tr class='table-footer'><td colspan='7'>Total Global Solicitado</td><td>${fmtInt(total)}</td></tr>`;
+        }
+
+        function renderDespachosProgramados(despachos, fecha) {
+            document.getElementById('titulo-programados').innerText = `DESPACHOS PROGRAMADOS: ${fecha}`;
+            let prog = despachos.filter(d => formatDateString(getProp(d, ['Fecha Despacho', 'Fecha'])) === fecha);
+            let tbody = document.getElementById('tbody-despachos-programados');
+            if (!tbody) return; tbody.innerHTML = ''; let total = 0; let destinoZonaMap = {};
+            prog.forEach(d => {
+                let kg = parseCleanNumber(getProp(d, ['Kilogramos', 'KG', 'Solicitados'])); total += kg;
+                let key = `${getProp(d, ['Zona']) || 'OTRO'} - ${getProp(d, ['Destino'])}`;
+                destinoZonaMap[key] = (destinoZonaMap[key] || 0) + kg;
+                tbody.innerHTML += `<tr>
+                    <td>${formatDateString(getProp(d, ['Fecha Despacho', 'Fecha']))}</td>
+                    <td>${getProp(d, ['Origen'])}</td>
+                    <td>${getProp(d, ['Destino'])}</td>
+                    <td>${getProp(d, ['Zona'])}</td>
+                    <td style='color:#00e676;'><b>${getProp(d, ['Vehiculo', 'Vehículo']) || '-'}</b></td>
+                    <td>${getProp(d, ['Cliente'])}</td>
+                    <td style='color:#94a3b8;'>${getProp(d, ['Líneas del pedido', 'Lineas del pedido', 'Líneas', 'Lineas', 'Pedido']) || '-'}</td>
+                    <td style='font-weight:bold;'>${fmtInt(kg)}</td>
+                </tr>`;
+            });
+            tbody.innerHTML += `<tr class='table-footer'><td colspan='7'>Total Despachos (${fecha})</td><td style='color:#00e676;'>${fmtInt(total)}</td></tr>`;
+
+            let layoutPie = Object.assign({}, darkThemeLayout, { title: `Proporción de KG: ${fecha} (Zona/Destino)` });
+            Plotly.newPlot('chart-pie-programados', [{ 
+                labels: Object.keys(destinoZonaMap), values: Object.values(destinoZonaMap), type: 'pie', hole: 0.5,
+                marker: { colors: brandColors }
+            }], layoutPie, {responsive: true});
+        }
+
+        function renderModuloRecepciones(recepciones, fechaActual) {
+            let recFechas = {}; let recDestinosMes = {};
+            recepciones.forEach(r => {
+                let f = formatDateString(getProp(r, ['FECHA', 'Fecha']));
+                let dest = getProp(r, ['DESTINO', 'Destino']) || 'OTRO';
+                let total = parseCleanNumber(getProp(r, ['Total', 'Kilogramos', 'Cantidad']));
+                if (f) recFechas[f] = (recFechas[f] || 0) + total;
+                recDestinosMes[dest] = (recDestinosMes[dest] || 0) + total;
+            });
+
+            let rFechasKeys = Object.keys(recFechas).sort();
+            let layoutFechas = Object.assign({}, darkThemeLayout, { title: 'Comparativa de Recepciones por Fecha' });
+            Plotly.newPlot('chart-recepciones-fechas', rFechasKeys.map(f => ({
+                x: [f], y: [recFechas[f]], name: f, type: 'bar', marker: {color: '#b388ff'}
+            })), layoutFechas, {responsive: true});
+
+            let layoutPie = Object.assign({}, darkThemeLayout, { title: 'Total de kg a recibir por destino' });
+            Plotly.newPlot('chart-recepciones-destino-pie', [{
+                labels: Object.keys(recDestinosMes), values: Object.values(recDestinosMes), type: 'pie', hole: 0.5, 
+                marker: {colors: ["#b388ff", "#00f2fe", "#4facfe", "#00e676"]}
+            }], layoutPie, {responsive: true});
+
+            let recDia = recepciones.filter(r => formatDateString(getProp(r, ['FECHA', 'Fecha'])) === fechaActual);
+            let destDiaMap = {}; let productosPorBodega = {};
+            recDia.forEach(r => {
+                let dest = getProp(r, ['DESTINO', 'Destino']) || 'DESCONOCIDO';
+                let prod = getProp(r, ['PRODUCTO', 'Producto']) || 'GENERAL';
+                let kg = parseCleanNumber(getProp(r, ['Total', 'Kilogramos', 'Cantidad']));
+                destDiaMap[dest] = (destDiaMap[dest] || 0) + kg;
+                if (!productosPorBodega[dest]) productosPorBodega[dest] = {};
+                productosPorBodega[dest][prod] = (productosPorBodega[dest][prod] || 0) + kg;
+            });
+
+            let layoutBarras = Object.assign({}, darkThemeLayout, { title: `KG a Recibir por Destino (${fechaActual})` });
+            Plotly.newPlot('chart-recepciones-barras-dia', Object.keys(destDiaMap).map(d => ({
+                x: [d], y: [destDiaMap[d]], name: d, type: 'bar', marker: {color: '#00f2fe'}
+            })), layoutBarras, {responsive: true});
+
+            document.getElementById('titulo-tabs-recepcion').innerText = `VISTA DINÁMICA POR DESTINO (${fechaActual})`;
+            let btnContainer = document.getElementById('tab-buttons-container'); let contentContainer = document.getElementById('tab-contents-container');
+            if (btnContainer) btnContainer.innerHTML = ''; if (contentContainer) contentContainer.innerHTML = '';
+
+            Object.keys(productosPorBodega).forEach((bodega, index) => {
+                let tabId = 'tab_' + bodega.replace(/[^a-zA-Z0-9]/g, '_');
+                if (btnContainer) {
+                    let btn = document.createElement('button'); btn.className = `tab-button ${index === 0 ? 'active' : ''}`;
+                    btn.innerText = bodega; btn.onclick = (e) => openTab(e, tabId); btnContainer.appendChild(btn);
+                }
+                let prods = productosPorBodega[bodega]; let rowsHtml = ''; let totalBodega = 0;
+                for (let p in prods) {
+                    totalBodega += prods[p];
+                    rowsHtml += `<tr><td style='text-align:left; color:#e2e8f0;'>${p}</td><td style='text-align:right; font-weight:bold; color:#00f2fe;'>${fmtNumber(prods[p])} kg</td></tr>`;
+                }
+                if (contentContainer) {
+                    let tabDiv = document.createElement('div'); tabDiv.id = tabId; tabDiv.className = 'tab-content'; tabDiv.style.display = index === 0 ? 'block' : 'none';
+                    tabDiv.innerHTML = `
+                        <h4 style='color:#b388ff; text-align:center; margin-top:0; text-transform:uppercase;'>Productos a recibir en ${bodega}</h4>
+                        <table style='width:80%; margin:auto; border:1px solid #2d3154;'>
+                            <thead style='background-color:#22253e;'>
+                                <tr><th style='text-align:left; border-bottom: none;'>Producto</th><th style='text-align:right; border-bottom: none;'>Cantidad (kg)</th></tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                                <tr style='background-color:#141526; font-weight:bold;'>
+                                    <td style='text-align:right; color:#b388ff;'>TOTAL:</td><td style='text-align:right; color:#00f2fe;'>${fmtNumber(totalBodega)} kg</td>
+                                </tr>
+                            </tbody>
+                        </table>`;
+                    contentContainer.appendChild(tabDiv);
+                }
+            });
+
+            document.getElementById('titulo-detalle-recepcion').innerText = `DETALLE GENERAL DE RECEPCIONES: ${fechaActual}`;
+            let tbodyRec = document.getElementById('tbody-recepciones-dia');
+            if (!tbodyRec) return; tbodyRec.innerHTML = ''; let totalRecDia = 0;
+            recDia.forEach(r => {
+                let kg = parseCleanNumber(getProp(r, ['Total', 'Kilogramos', 'Cantidad'])); totalRecDia += kg;
+                tbodyRec.innerHTML += `<tr>
+                    <td>${formatDateString(getProp(r, ['FECHA', 'Fecha']))}</td>
+                    <td>${getProp(r, ['IMPORTACION', 'Importacion'])}</td>
+                    <td>${getProp(r, ['DESTINO', 'Destino'])}</td>
+                    <td style='color:#b388ff;'><b>${getProp(r, ['PRODUCTO', 'Producto'])}</b></td>
+                    <td style='font-weight:bold; color:#00f2fe;'>${fmtNumber(kg)}</td>
+                </tr>`;
+            });
+            tbodyRec.innerHTML += `<tr class='table-footer'><td colspan='4'>Total Recepciones (${fechaActual})</td><td style='color:#b388ff;'>${fmtNumber(totalRecDia)}</td></tr>`;
+        }
+
+        function openTab(evt, tabName) {
+            let tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
+            let tablinks = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tablinks.length; i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        window.onload = () => { initDashboard(); setInterval(initDashboard, 60000); };
+    </script>
+</body>
+</html>
